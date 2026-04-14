@@ -1,0 +1,6 @@
+Flask==3.0.3
+Flask-CORS==4.0.0
+numpy==2.2.4
+Pillow==11.2.1
+gunicorn==21.2.0
+Werkzeug==3.0.6

@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=1280"/>
+<title>Disease Diagnosis using AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+/* ─── RESET ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;               /* each screen is exactly viewport */
+  font-family: 'Inter', sans-serif;
+  background: #7dd4c8;
+}
+
+/* ─── SCREEN SYSTEM ─── */
+.screen {
+  position: fixed; inset: 0;
+  display: none;
+  flex-direction: column;
+  background: #7dd4c8;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+.screen.active {
+  display: flex;
+  pointer-events: all;
+}
+.screen.visible { opacity: 1; }
+
+/* ─── NAV ─── */
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 52px;
+  height: 76px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+
+/* Cross logo */
+.logo {
+  position: relative;
+  width: 46px; height: 46px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.logo::before, .logo::after {
+  content: '';
+  position: absolute;
+  background: #fff;
+  border-radius: 4px;
+}
+.logo::before { width: 46px; height: 17px; top: 14.5px; left: 0; }
+.logo::after  { width: 17px; height: 46px; top: 0; left: 14.5px; }
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav-btn {
+  padding: 11px 30px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1c6060;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+  white-space: nowrap;
+}
+.nav-btn:hover { background: rgba(255,255,255,0.38); }
+.nav-btn.active {
+  background: #3d9e98;
+  color: #fff;
+}
+
+/* ════════════════════════════════════
+   SCREEN 1 — HOME
+════════════════════════════════════ */
+#s-home {
+  background: #7dd4c8;
+}
+.home-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 90px 40px 90px;
+  gap: 0;
+}
+.home-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-right: 40px;
+}
+.home-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 88px;
+  font-weight: 400;
+  line-height: 1.0;
+  color: #fff;
+  margin-bottom: 26px;
+  letter-spacing: -1px;
+}
+.home-sub {
+  font-size: 18px;
+  font-weight: 400;
+  color: rgba(10, 55, 50, 0.72);
+  line-height: 1.5;
+  margin-bottom: 38px;
+  max-width: 380px;
+}
+.btn-symptoms {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 260px;
+  height: 58px;
+  background: #3d9e98;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  letter-spacing: 0.01em;
+}
+.btn-symptoms:hover { background: #2f8882; transform: translateY(-2px); }
+
+.home-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── 3D MEDICINE ILLUSTRATION (CSS + SVG) ─── */
+.medicine-wrap {
+  position: relative;
+  width: 520px;
+  height: 480px;
+}
+
+/* Blister pack */
+.blister {
+  position: absolute;
+  top: 20px; right: -10px;
+  width: 310px; height: 420px;
+  background: linear-gradient(140deg, #d8dde9 0%, #b4bccb 100%);
+  border-radius: 22px;
+  box-shadow: 8px 16px 48px rgba(0,0,0,0.18), inset 0 2px 6px rgba(255,255,255,0.4);
+  transform: rotate(-6deg);
+  overflow: hidden;
+}
+.blister::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.22) 0%, transparent 60%);
+  border-radius: 22px;
+}
+.blister-grid {
+  position: absolute;
+  top: 28px; left: 22px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 8px;
+  width: calc(100% - 44px);
+}
+.blister-pill {
+  height: 44px;
+  background: linear-gradient(135deg, #a8d4f8 0%, #5e9ed8 100%);
+  border-radius: 22px;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(60,100,180,0.25), inset 0 2px 4px rgba(255,255,255,0.5);
+}
+.blister-pill::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 1.5px;
+  height: 70%;
+  background: rgba(255,255,255,0.6);
+  border-radius: 2px;
+}
+
+/* Medicine bottle */
+.bottle-wrap {
+  position: absolute;
+  bottom: 20px; left: 60px;
+  width: 220px;
+  filter: drop-shadow(16px 24px 40px rgba(0,0,0,0.20));
+}
+/* Cap */
+.bottle-cap {
+  width: 154px;
+  height: 70px;
+  background: linear-gradient(160deg, #e2eaf8 0%, #b8c8e4 100%);
+  border-radius: 16px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+}
+.bottle-cap::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 12px,
+    rgba(140,160,200,0.35) 12px,
+    rgba(140,160,200,0.35) 13.5px
+  );
+}
+.bottle-cap::after {
+  content: '';
+  position: absolute; top: 0; left: 0;
+  width: 40%; height: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0.3) 0%, transparent 100%);
+}
+/* Neck */
+.bottle-neck {
+  width: 112px;
+  height: 44px;
+  background: linear-gradient(90deg, #cdd5e8 0%, #b8c2d8 100%);
+  margin: 0 auto;
+  border-radius: 4px 4px 0 0;
+}
+/* Body */
+.bottle-body {
+  width: 220px;
+  height: 248px;
+  background: linear-gradient(160deg, #f2f5ff 0%, #c8d0e4 100%);
+  border-radius: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.bottle-body::after {
+  content: '';
+  position: absolute; top: 0; left: 0;
+  width: 30%; height: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0.28) 0%, transparent 100%);
+}
+/* Label */
+.bottle-label {
+  position: absolute;
+  top: 44px; left: 0; right: 0;
+  height: 152px;
+  background: linear-gradient(160deg, #c8a8e8 0%, #9e78c8 100%);
+}
+.bottle-label::after {
+  content: '';
+  position: absolute; top: 0; left: 0;
+  width: 28%; height: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0.18) 0%, transparent 100%);
+}
+/* Cross on label */
+.label-cross {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 68px; height: 68px;
+}
+.label-cross::before, .label-cross::after {
+  content: '';
+  position: absolute;
+  background: rgba(255,255,255,0.94);
+  border-radius: 5px;
+}
+.label-cross::before { width: 68px; height: 24px; top: 22px; left: 0; }
+.label-cross::after  { width: 24px; height: 68px; top: 0; left: 22px; }
+
+/* Scattered pills */
+.pill {
+  position: absolute;
+  border-radius: 999px;
+  box-shadow: 4px 8px 20px rgba(0,0,0,0.16);
+}
+/* Pink large pill top-right */
+.pill-pink {
+  width: 108px; height: 42px;
+  background: linear-gradient(135deg, #f8aad4 0%, #e070b8 100%);
+  top: 52px; right: -30px;
+  transform: rotate(-22deg);
+}
+.pill-pink::after {
+  content: '';
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 1.5px; height: 72%;
+  background: rgba(255,255,255,0.55);
+}
+/* Gold round pill right-center */
+.pill-gold {
+  width: 52px; height: 52px;
+  background: radial-gradient(circle at 36% 34%, #f8d870, #d8a028);
+  top: 200px; right: 0px;
+  border-radius: 50%;
+}
+/* Red oval pill bottom-left */
+.pill-red {
+  width: 78px; height: 44px;
+  background: linear-gradient(135deg, #f89080 0%, #d85040 100%);
+  bottom: 28px; left: 28px;
+  transform: rotate(16deg);
+  border-radius: 999px;
+}
+/* Blue+white capsule bottom-center */
+.pill-capsule {
+  width: 132px; height: 46px;
+  bottom: 10px; left: 140px;
+  transform: rotate(28deg);
+  position: absolute;
+  border-radius: 999px;
+  box-shadow: 4px 8px 20px rgba(0,0,0,0.16);
+  overflow: hidden;
+}
+.pill-capsule-left {
+  position: absolute; top: 0; left: 0;
+  width: 50%; height: 100%;
+  background: linear-gradient(135deg, #f0f2ff 0%, #c8cce8 100%);
+}
+.pill-capsule-right {
+  position: absolute; top: 0; right: 0;
+  width: 50%; height: 100%;
+  background: linear-gradient(135deg, #98d0f8 0%, #5898d8 100%);
+}
+.pill-capsule-seam {
+  position: absolute; top: 0; left: 50%;
+  width: 2px; height: 100%;
+  background: rgba(255,255,255,0.55);
+}
+/* Small white capsule right-bottom */
+.pill-white {
+  width: 86px; height: 32px;
+  background: linear-gradient(135deg, #f8f8ff 0%, #d0d2e8 100%);
+  bottom: 88px; right: -16px;
+  transform: rotate(-38deg);
+  overflow: hidden;
+}
+.pill-white::after {
+  content: '';
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 1.5px; height: 72%;
+  background: rgba(200,200,220,0.7);
+}
+
+/* ════════════════════════════════════
+   SCREEN 2 — HOW IT WORKS
+════════════════════════════════════ */
+#s-how {
+  background: #7dd4c8;
+}
+.how-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 80px 60px;
+}
+.cards-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  width: 100%;
+  max-width: 1120px;
+}
+.how-card {
+  background: #fff;
+  border-radius: 28px;
+  padding: 52px 44px 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 1;
+  max-width: 320px;
+  box-shadow: 0 6px 40px rgba(0,0,0,0.08);
+  transition: transform 0.22s, box-shadow 0.22s;
+}
+.how-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 56px rgba(0,0,0,0.13);
+}
+.how-card.center-card {
+  max-width: 350px;
+  padding: 60px 48px 48px;
+  transform: translateY(-28px);
+  box-shadow: 0 10px 56px rgba(0,0,0,0.12);
+}
+.how-card.center-card:hover {
+  transform: translateY(-36px);
+  box-shadow: 0 20px 64px rgba(0,0,0,0.15);
+}
+.card-icon {
+  margin-bottom: 32px;
+}
+.circle-num {
+  width: 96px; height: 96px;
+  border-radius: 50%;
+  border: 3px solid #1a1a1a;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px; font-weight: 800; color: #111;
+}
+.card-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 24px;
+  line-height: 1.3;
+}
+.card-plus {
+  font-size: 24px;
+  font-weight: 700;
+  color: #3d9e98;
+  line-height: 1;
+}
+
+/* ════════════════════════════════════
+   SCREEN 3 — SYMPTOMS
+════════════════════════════════════ */
+#s-symptoms { background: #7dd4c8; }
+.symptoms-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 120px 60px;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+}
+.symptoms-title {
+  font-size: 52px;
+  font-weight: 900;
+  color: #111;
+  text-align: center;
+  margin-bottom: 52px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+.symptoms-label {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111;
+  margin-bottom: 16px;
+}
+.big-input {
+  width: 100%;
+  padding: 20px 28px;
+  background: #fff;
+  border: 2.5px solid transparent;
+  border-radius: 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 17px;
+  color: #333;
+  outline: none;
+  margin-bottom: 22px;
+  box-shadow: 0 3px 16px rgba(0,0,0,0.07);
+  transition: border-color 0.2s;
+}
+.big-input:focus { border-color: #3d9e98; }
+.big-input::placeholder { color: #b0b8b8; }
+.fields-row {
+  display: flex;
+  gap: 22px;
+  margin-bottom: 52px;
+}
+.field-box {
+  flex: 1;
+  padding: 18px 22px;
+  background: #fff;
+  border: 2.5px solid transparent;
+  border-radius: 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  color: #333;
+  outline: none;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.07);
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+  cursor: pointer;
+  text-align: center;
+}
+.field-box:focus { border-color: #3d9e98; }
+.field-box::placeholder { color: #b0b8b8; }
+.field-box.select {
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%23666' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 20px center;
+  padding-right: 48px;
+}
+.field-box option { background: #fff; color: #333; text-align: left; }
+.btn-analyze {
+  display: block;
+  width: 580px;
+  margin: 0 auto;
+  height: 68px;
+  background: #3d9e98;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  box-shadow: 0 6px 24px rgba(61,158,152,0.38);
+}
+.btn-analyze:hover:not(:disabled) { background: #2f8882; transform: translateY(-2px); }
+.btn-analyze:disabled { opacity: 0.62; cursor: not-allowed; }
+
+/* ════════════════════════════════════
+   SCREEN 4 — RESULTS
+════════════════════════════════════ */
+#s-results { background: #7dd4c8; overflow-y: auto; }
+.results-scroll {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 120px 60px;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+}
+.results-title {
+  font-size: 46px;
+  font-weight: 900;
+  color: #111;
+  text-align: center;
+  margin-bottom: 36px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.result-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 28px 36px;
+  margin-bottom: 18px;
+  box-shadow: 0 4px 28px rgba(0,0,0,0.07);
+}
+.result-card h3 {
+  font-size: 11px;
+  font-weight: 700;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.result-main { font-size: 36px; font-weight: 900; color: #111; margin: 6px 0; }
+.risk-badge {
+  display: inline-block;
+  padding: 5px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 4px;
+}
+.risk-low  { background: #d1fae5; color: #065f46; }
+.risk-med  { background: #fef3c7; color: #92400e; }
+.risk-high { background: #fee2e2; color: #991b1b; }
+.prob-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+.prob-item { background: #f7f8fa; border-radius: 12px; padding: 16px 18px; }
+.prob-item-label { font-size: 12px; color: #888; font-weight: 500; margin-bottom: 6px; }
+.prob-item-val { font-size: 26px; font-weight: 800; color: #111; margin-bottom: 10px; }
+.prob-bar-track { height: 8px; background: #e5e7eb; border-radius: 99px; overflow: hidden; }
+.prob-bar-fill { height: 100%; border-radius: 99px; transition: width 1.2s ease; }
+.result-factors { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.factor-chip { display:inline-flex; align-items:center; gap:5px; padding:5px 14px; border-radius:8px; font-size:13px; font-weight:600; }
+.fc-red   { background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; }
+.fc-green { background:#d1fae5; color:#065f46; border:1px solid #6ee7b7; }
+.fc-blue  { background:#dbeafe; color:#1e40af; border:1px solid #93c5fd; }
+.disclaimer {
+  background: rgba(255,255,255,0.45);
+  border-radius: 12px;
+  padding: 14px 22px;
+  font-size: 13px;
+  color: #445;
+  line-height: 1.6;
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* ─── BACK BTN (circle arrow, fixed bottom-left) ─── */
+.btn-back {
+  position: fixed;
+  bottom: 32px; left: 36px;
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: #3d9e98;
+  color: #fff;
+  border: none;
+  font-size: 22px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+  transition: background 0.2s, transform 0.15s;
+  z-index: 50;
+}
+.btn-back:hover { background: #2f8882; transform: scale(1.08); }
+
+/* ─── SPINNER ─── */
+.spin {
+  display: inline-block;
+  width: 20px; height: 20px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spinning .6s linear infinite;
+  vertical-align: middle;
+  margin-right: 10px;
+}
+@keyframes spinning { to { transform: rotate(360deg); } }
+
+/* ─── TOAST ─── */
+.toast {
+  position: fixed;
+  bottom: 32px; right: 36px;
+  z-index: 200;
+  background: #1a5050;
+  color: #fff;
+  border-radius: 12px;
+  padding: 13px 22px;
+  font-size: 15px;
+  font-weight: 500;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.22);
+  max-width: 340px;
+  transform: translateY(90px);
+  opacity: 0;
+  transition: transform 0.3s, opacity 0.3s;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+  SCREEN 1  ·  HOME
+═══════════════════════════════════════════ -->
+<div class="screen" id="s-home">
+  <nav>
+    <div class="logo" onclick="show('home')"></div>
+    <div class="nav-links">
+      <button class="nav-btn" onclick="show('how')">How it works</button>
+      <button class="nav-btn active" id="nb-home">Home</button>
+      <button class="nav-btn" onclick="show('about')">About AI</button>
+      <button class="nav-btn" onclick="show('signup')">Sign up</button>
+    </div>
+  </nav>
+
+  <div class="home-body">
+    <!-- LEFT TEXT -->
+    <div class="home-left">
+      <h1 class="home-title">Disease<br>Diagnosis<br>using AI</h1>
+      <p class="home-sub">Enter your symptoms and get instant health insights</p>
+      <button class="btn-symptoms" onclick="show('symptoms')">Check for symptoms</button>
+    </div>
+
+    <!-- RIGHT — MEDICINE ILLUSTRATION -->
+    <div class="home-right">
+      <div class="medicine-wrap">
+
+        <!-- Blister pack (behind) -->
+        <div class="blister">
+          <div class="blister-grid">
+            <div class="blister-pill"></div>
+            <div class="blister-pill"></div>
+            <div class="blister-pill"></div>
+            <div class="blister-pill"></div>
+            <div class="blister-pill"></div>
+            <div class="blister-pill"></div>
+            <div class="blister-pill"></div>
+            <div class="blister-pill"></div>
+            <div class="blister-pill"></div>
+            <div class="blister-pill"></div>
+            <div class="blister-pill"></div>
+            <div class="blister-pill"></div>
+          </div>
+        </div>
+
+        <!-- Scattered pills -->
+        <div class="pill pill-pink"></div>
+        <div class="pill pill-gold"></div>
+        <div class="pill pill-red"></div>
+        <div class="pill-capsule">
+          <div class="pill-capsule-left"></div>
+          <div class="pill-capsule-right"></div>
+          <div class="pill-capsule-seam"></div>
+        </div>
+        <div class="pill pill-white"></div>
+
+        <!-- Medicine bottle (front) -->
+        <div class="bottle-wrap">
+          <div class="bottle-cap"></div>
+          <div class="bottle-neck"></div>
+          <div class="bottle-body">
+            <div class="bottle-label">
+              <div class="label-cross"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+  SCREEN 2  ·  HOW IT WORKS
+═══════════════════════════════════════════ -->
+<div class="screen" id="s-how">
+  <nav>
+    <div class="logo" onclick="show('home')"></div>
+    <div class="nav-links">
+      <button class="nav-btn active">How it works</button>
+      <button class="nav-btn" onclick="show('home')">Home</button>
+      <button class="nav-btn" onclick="show('about')">About AI</button>
+      <button class="nav-btn" onclick="show('signup')">Sign up</button>
+    </div>
+  </nav>
+
+  <div class="how-body">
+    <div class="cards-row">
+
+      <!-- Card 1: Enter symptoms -->
+      <div class="how-card" onclick="show('symptoms')" style="cursor:pointer">
+        <div class="card-icon">
+          <div class="circle-num">1</div>
+        </div>
+        <div class="card-title">Enter your symptoms</div>
+        <div class="card-plus">+</div>
+      </div>
+
+      <!-- Card 2: AI analyzes (center / featured) -->
+      <div class="how-card center-card">
+        <div class="card-icon">
+          <svg width="104" height="104" viewBox="0 0 104 104" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- head profile -->
+            <path d="M52 14 C32 14 20 27 20 43 C20 60 28 70 40 75 L40 90 L64 90 L64 75 C76 70 84 60 84 43 C84 27 72 14 52 14 Z"
+              stroke="#111" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
+            <rect x="42" y="78" width="20" height="12" rx="4"
+              stroke="#111" stroke-width="3" fill="none"/>
+            <!-- central node -->
+            <circle cx="52" cy="44" r="7" stroke="#111" stroke-width="3" fill="none"/>
+            <!-- outer nodes -->
+            <circle cx="34" cy="35" r="5" stroke="#111" stroke-width="2.5" fill="none"/>
+            <circle cx="70" cy="35" r="5" stroke="#111" stroke-width="2.5" fill="none"/>
+            <circle cx="28" cy="54" r="5" stroke="#111" stroke-width="2.5" fill="none"/>
+            <circle cx="76" cy="54" r="5" stroke="#111" stroke-width="2.5" fill="none"/>
+            <circle cx="52" cy="64" r="5" stroke="#111" stroke-width="2.5" fill="none"/>
+            <!-- connection lines -->
+            <line x1="45.5" y1="39.5" x2="38" y2="38"   stroke="#111" stroke-width="2.2"/>
+            <line x1="58.5" y1="39.5" x2="66" y2="38"   stroke="#111" stroke-width="2.2"/>
+            <line x1="45"   y1="48.5" x2="32" y2="52"   stroke="#111" stroke-width="2.2"/>
+            <line x1="59"   y1="48.5" x2="72" y2="52"   stroke="#111" stroke-width="2.2"/>
+            <line x1="52"   y1="51"   x2="52" y2="59"   stroke="#111" stroke-width="2.2"/>
+          </svg>
+        </div>
+        <div class="card-title">AI analyzes the data</div>
+        <div class="card-plus">+</div>
+      </div>
+
+      <!-- Card 3: Get results -->
+      <div class="how-card">
+        <div class="card-icon">
+          <svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="48" cy="48" r="42" stroke="#111" stroke-width="3.5"/>
+            <path d="M27 48 L40 62 L69 34" stroke="#111" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="card-title">Get results instantly</div>
+        <div class="card-plus" style="font-size:28px">✛</div>
+      </div>
+
+    </div>
+  </div>
+  <button class="btn-back" onclick="show('home')">&#8592;</button>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+  SCREEN 3  ·  SYMPTOMS FORM
+═══════════════════════════════════════════ -->
+<div class="screen" id="s-symptoms">
+  <nav>
+    <div class="logo" onclick="show('home')"></div>
+    <div class="nav-links">
+      <button class="nav-btn" onclick="show('how')">How it works</button>
+      <button class="nav-btn" onclick="show('home')">Home</button>
+      <button class="nav-btn" onclick="show('about')">About AI</button>
+      <button class="nav-btn" onclick="show('signup')">Sign up</button>
+    </div>
+  </nav>
+
+  <div class="symptoms-body">
+    <h1 class="symptoms-title">Enter Your Symptoms</h1>
+
+    <div class="symptoms-label">Describe your symptoms</div>
+    <input class="big-input" id="symp-text" type="text" placeholder="Enter your text"/>
+
+    <div class="fields-row">
+      <input class="field-box" id="symp-age"      type="number" placeholder="Enter your age" min="1" max="120"/>
+      <select class="field-box select" id="symp-gender">
+        <option value="" disabled selected>Select Gender ▼</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="other">Other</option>
+      </select>
+      <input class="field-box" id="symp-duration" type="text" placeholder="Enter time duration"/>
+    </div>
+
+    <button class="btn-analyze" id="analyze-btn" onclick="analyze()">
+      Analyze Symptoms
+    </button>
+  </div>
+
+  <button class="btn-back" onclick="show('how')">&#8592;</button>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+  SCREEN 4  ·  RESULTS
+═══════════════════════════════════════════ -->
+<div class="screen" id="s-results">
+  <nav>
+    <div class="logo" onclick="show('home')"></div>
+    <div class="nav-links">
+      <button class="nav-btn" onclick="show('how')">How it works</button>
+      <button class="nav-btn" onclick="show('home')">Home</button>
+      <button class="nav-btn" onclick="show('about')">About AI</button>
+      <button class="nav-btn" onclick="show('signup')">Sign up</button>
+    </div>
+  </nav>
+
+  <div class="results-scroll">
+    <h1 class="results-title">AI Diagnosis Result</h1>
+
+    <!-- Row: verdict + score -->
+    <div class="result-card" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <h3>Risk Level</h3>
+        <div class="result-main" id="r-level">—</div>
+        <span class="risk-badge" id="r-badge"></span>
+      </div>
+      <div style="text-align:right">
+        <h3>Risk Score</h3>
+        <div class="result-main" id="r-score">—</div>
+      </div>
+    </div>
+
+    <!-- Probabilities -->
+    <div class="result-card">
+      <h3 style="margin-bottom:16px">Cancer Type Probabilities</h3>
+      <div class="prob-grid">
+        <div class="prob-item">
+          <div class="prob-item-label">Adenocarcinoma</div>
+          <div class="prob-item-val" id="rv-adeno">—</div>
+          <div class="prob-bar-track"><div class="prob-bar-fill" id="rb-adeno" style="width:0%;background:linear-gradient(90deg,#3d9e98,#64d0c8)"></div></div>
+        </div>
+        <div class="prob-item">
+          <div class="prob-item-label">Squamous Cell</div>
+          <div class="prob-item-val" id="rv-squam">—</div>
+          <div class="prob-bar-track"><div class="prob-bar-fill" id="rb-squam" style="width:0%;background:linear-gradient(90deg,#6366f1,#a5b4fc)"></div></div>
+        </div>
+        <div class="prob-item">
+          <div class="prob-item-label">Large Cell</div>
+          <div class="prob-item-val" id="rv-large">—</div>
+          <div class="prob-bar-track"><div class="prob-bar-fill" id="rb-large" style="width:0%;background:linear-gradient(90deg,#f59e0b,#fcd34d)"></div></div>
+        </div>
+        <div class="prob-item">
+          <div class="prob-item-label">Benign / Normal</div>
+          <div class="prob-item-val" id="rv-benign">—</div>
+          <div class="prob-bar-track"><div class="prob-bar-fill" id="rb-benign" style="width:0%;background:linear-gradient(90deg,#22c55e,#86efac)"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Factors -->
+    <div class="result-card">
+      <h3 style="margin-bottom:12px">Identified Risk Factors</h3>
+      <div class="result-factors" id="r-factors"></div>
+    </div>
+
+    <div class="disclaimer">
+      ⚠️ This AI tool is for educational &amp; research purposes only. It does not replace professional medical diagnosis. Please consult a qualified physician for any health concerns.
+    </div>
+  </div>
+
+  <button class="btn-back" onclick="show('symptoms')">&#8592;</button>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+
+<script>
+/* ─────────────────────────────────────────
+   CONFIG  —  set to your Flask backend URL
+───────────────────────────────────────── */
+const API_BASE = '';
+
+/* ─────────────────────────────────────────
+   NAVIGATION
+───────────────────────────────────────── */
+const screens = {
+  home:     's-home',
+  how:      's-how',
+  symptoms: 's-symptoms',
+  results:  's-results',
+  about:    's-home',
+  signup:   's-home',
+};
+
+function show(page) {
+  const targetId = screens[page] || 's-home';
+
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('visible');
+    // After fade out, hide
+    setTimeout(() => {
+      if (!s.classList.contains('active')) return;
+      if (s.id !== targetId) { s.classList.remove('active'); }
+    }, 340);
+  });
+
+  const el = document.getElementById(targetId);
+  el.classList.add('active');
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('visible')));
+
+  // Reset results scroll
+  if (page === 'results') {
+    const scroll = el.querySelector('.results-scroll');
+    if (scroll) scroll.scrollTop = 0;
+  }
+}
+
+// Initialise first screen
+window.addEventListener('DOMContentLoaded', () => {
+  const home = document.getElementById('s-home');
+  home.classList.add('active');
+  requestAnimationFrame(() => requestAnimationFrame(() => home.classList.add('visible')));
+});
+
+/* ─────────────────────────────────────────
+   ANALYZE
+───────────────────────────────────────── */
+async function analyze() {
+  const text     = document.getElementById('symp-text').value.trim();
+  const age      = +document.getElementById('symp-age').value || 0;
+  const gender   = document.getElementById('symp-gender').value;
+  const duration = document.getElementById('symp-duration').value.trim();
+
+  if (!text && !age) {
+    toast('Please enter your symptoms or age first.');
+    return;
+  }
+
+  const btn = document.getElementById('analyze-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>Analyzing…';
+
+  try {
+    const res = await fetch(`${API_BASE}/predict_symptoms`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symptoms: text, age, gender, duration }),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    renderResults(data, text, age, gender);
+  } catch (err) {
+    // Demo mode fallback
+    renderResults(demoResult(age, text), text, age, gender);
+    toast('Demo mode — connect your Flask backend for real predictions.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Analyze Symptoms';
+  }
+}
+
+/* Demo scoring when backend is offline */
+function demoResult(age, symptoms) {
+  const s = (symptoms || '').toLowerCase();
+  let r = 8;
+  if (s.includes('cough'))            r += 20;
+  if (s.includes('blood'))            r += 26;
+  if (s.includes('pain'))             r += 15;
+  if (s.includes('breath'))           r += 18;
+  if (s.includes('weight'))           r += 12;
+  if (s.includes('fatigue'))          r += 10;
+  if (s.includes('hoarse'))           r += 13;
+  if (s.includes('wheez'))            r += 11;
+  if (age > 55) r += 12;
+  if (age > 65) r += 10;
+  r = Math.min(r, 92);
+  const benign = Math.max(5, 88 - r);
+  return {
+    risk_score: r,
+    risk_level: r < 30 ? 'Low' : r < 58 ? 'Medium' : 'High',
+    probabilities: {
+      adenocarcinoma: Math.round(r * 0.44),
+      squamous_cell:  Math.round(r * 0.30),
+      large_cell:     Math.round(r * 0.26),
+      benign,
+    },
+  };
+}
+
+/* Render results and navigate */
+function renderResults(data, symptoms, age, gender) {
+  const score = Math.round(data.risk_score || 0);
+  const level = data.risk_level || 'Low';
+  const p     = data.probabilities || {};
+
+  document.getElementById('r-level').textContent = level + ' Risk';
+  document.getElementById('r-score').textContent = score + '%';
+
+  const badge = document.getElementById('r-badge');
+  badge.textContent = level;
+  badge.className   = 'risk-badge ' + (level === 'Low' ? 'risk-low' : level === 'Medium' ? 'risk-med' : 'risk-high');
+
+  const setBar = (vid, bid, val) => {
+    const v = Math.round(val || 0);
+    document.getElementById(vid).textContent = v + '%';
+    setTimeout(() => { document.getElementById(bid).style.width = v + '%'; }, 250);
+  };
+  setBar('rv-adeno', 'rb-adeno', p.adenocarcinoma);
+  setBar('rv-squam',  'rb-squam', p.squamous_cell);
+  setBar('rv-large',  'rb-large', p.large_cell);
+  setBar('rv-benign', 'rb-benign', p.benign);
+
+  // Risk factor chips
+  const chips = [];
+  if (age > 55) chips.push({ label: `Age ${age} — elevated risk`, cls: 'fc-red' });
+  if (gender)   chips.push({ label: gender.charAt(0).toUpperCase() + gender.slice(1), cls: 'fc-blue' });
+  if (symptoms) {
+    const kw = symptoms.split(/[\s,;.]+/).filter(w => w.length > 3).slice(0, 6);
+    kw.forEach(w => chips.push({
+      label: w.charAt(0).toUpperCase() + w.slice(1),
+      cls: level === 'Low' ? 'fc-green' : 'fc-red',
+    }));
+  }
+
+  document.getElementById('r-factors').innerHTML = chips.length
+    ? chips.map(c => `<span class="factor-chip ${c.cls}">${c.label}</span>`).join('')
+    : '<span style="font-size:14px;color:#666">No major risk factors identified.</span>';
+
+  show('results');
+}
+
+/* Toast helper */
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 4500);
+}
+</script>
+</body>
+</html>
