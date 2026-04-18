@@ -1,0 +1,11 @@
+// inport libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+sns.set_style("whitegrid")
+// load dataset
+data = pd.read_csv("lung_cancer.csv")
+
+# Convert target
+data['LUNG_CANCER'] = data['LUNG_CANCER'].map({'YES':1, 'NO':0})
