@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lung Cancer Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<h2 style="text-align:center;">Lung Cancer Risk Analysis</h2>
+
+<canvas id="myChart" width="400" height="200"></canvas>
+
+<script>
+    const ctx = document.getElementById('myChart').getContext('2d');
+
+    const myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Smoking', 'Age Risk', 'Symptoms', 'Overall Risk'],
+            datasets: [{
+                label: 'Risk Level (%)',
+                data: [80, 65, 70, 75],  // You can replace with dynamic values
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
